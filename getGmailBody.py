@@ -9,7 +9,13 @@ import email
 import base64
 import csv
 
-#don't forget to add the credentials file in your project
+#######################################################################
+### don't forget to add the credentials file in your project        ###          
+### change searchString inside getInfo()                            ###
+### change or delete the start and end for each useful info you want###
+### you will probably need to modify SAVE_TO_INFO_SCV               ###
+### and the scv in save_info_to_CSV()                               ###
+#######################################################################
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/gmail.readonly']
@@ -22,16 +28,16 @@ def main():
     #connect to the gmail account
     service = getService()
 
-    getFundingInfo(service)
-    getRefundingInfo(service)
+    getInfo(service)
     
-def getFundingInfo(service):
-    #search for label
-    searchString = "from:(@trading212.com) subject:(Real Account Funded Successfully)"
+    
+def getInfo(service):
+    #search the mails with this string
+    searchString = "Test search"
     #get the id list of the emails that match as well as their number
     list_of_funding_ids, numberResults = search_messages(service, 'me', searchString)
     #print the total matching emails for the user
-    print("Number of Trading 212 funding transactions: " + str(numberResults) + "\n")
+    print("Number of matching emails: " + str(numberResults) + "\n")
     #specify where the script will find the usefull information
     start_str1 = "start of useful info 1"
     end_str1 = "end of useful info 1"
@@ -138,32 +144,38 @@ def get_message(service, user_id, msg_id, start_str1, end_str1, start_str2, end_
 
 
 def print_formatted_text(msg_id, text, date, start_str1, end_str1, start_str2, end_str2, start_str3, end_str3):
-    #get all the common info
-    useful_info1 = split_text(text, start_str1, end_str1)
     #print all the common info
     print("Date: " + date)
     print("Email id: " + msg_id)
 
+    #This is where you get the info you want
+    #This gets only one word you can use the same function without
+    #.strip() to return with spaces
+    useful_info1 = split_text(text, start_str1, end_str1)
     useful_info2 = split_text(text, start_str2, end_str2)
     useful_info3 = split_text(text, start_str3, end_str3)
-    #print the remaining info for funding
-    print(start_str1 + " " + deposited_withdrawn)
-    print(start_str2 + " " + transactionFee)
-    print(start_str3 + " " + total  + "\n")
-    #refresh the global variable SAVE_TO_FUNDING_SCV
+
+    #print the info
+    print(start_str1 + " " + useful_info1)
+    print(start_str2 + " " + useful_info1)
+    print(start_str3 + " " + useful_info1  + "\n")
+
+    #refresh the global variable SAVE_TO_INFO_SCV
     SAVE_TO_INFO_SCV.append([date, msg_id, useful_info1, useful_info2, useful_info3])
     
 
 def save_info_to_CSV():
-    with open('Trading212Funding.csv', 'w', newline='') as file:
+    with open('UsefulInfo.csv', 'w', newline='') as file:
         writer = csv.writer(file, delimiter='|')
         writer.writerows(SAVE_TO_INFO_SCV)
 
 
 
 def split_text(plainText, start, end):
-    usefullText = plainText.split(start)[1]
-    usefullText = usefullText.split(end)[0]
+    if start != '':
+        usefullText = plainText.split(start)[1]
+    if end != '':
+        usefullText = usefullText.split(end)[0]
     return usefullText.strip()
     
 
